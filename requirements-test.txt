@@ -1,0 +1,8 @@
+behave
+pytest
+selenium
+requests
+beautifulsoup4
+playwright
+openpyxl
+gitpython
