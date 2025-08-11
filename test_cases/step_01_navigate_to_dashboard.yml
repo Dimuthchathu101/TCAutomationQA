@@ -1,0 +1,75 @@
+feature: Generic Test
+parameters:
+  description: Navigate to dashboard
+  original_parameters:
+    action_category: navigation
+    bdd_scenarios:
+    - description: Test Navigate to dashboard on element
+      name: Navigation General Test
+      steps:
+      - Given I am on the application page
+      - And I am authenticated
+      - When I click on the element
+      - Then I should be navigated to the target page
+      - And the page should load completely
+      tags:
+      - navigation
+      - general
+      - optimized
+    - description: Verify successful navigation to element
+      name: Successful Navigation
+      steps:
+      - Given I am authenticated
+      - And I am on the current page
+      - When I click on the element
+      - Then I should be navigated to the target page
+      - And the page should load completely
+      - And the page title should be correct
+      tags:
+      - navigation
+      - navigation
+      - optimized
+    complexity: 1.0
+    element: element
+    element_attributes:
+      enabled: true
+      interactive: false
+      name: element
+      type: general
+      visible: true
+    element_confidence: 0.7
+    element_selectors:
+      attribute: '[data-testid*=''element'' i] or [data-qa*=''element'' i] or [aria-label*=''element''
+        i] or [title*=''element'' i]'
+      class: null
+      css: div[id*='element' i], div[class*='element' i]
+      id: null
+      text: text=element
+      xpath: //div[contains(text(), 'element') or contains(@id, 'element') or contains(@class,
+        'element')]
+    element_type: general
+    excel_row: 2
+    expected_result: Step completed successfully
+    interaction_type: click
+    notes: Step 2
+    optimization_level: advanced
+    priority: 1.5
+    relevant_bdd_steps:
+    - Given I am on the application page
+    - And I am authenticated
+    - When I click on the element
+    - Then I should be navigated to the target page
+    - And the page should load completely
+    suggested_actions: []
+    test_case_type: Test Step
+    validation_rules: []
+    wait_strategy: visible
+  step_type: navigate_to
+scenario: Navigate to dashboard
+steps:
+- action: I am on the Test 01 page
+  step: Given
+- action: I perform navigate_to
+  step: When
+- action: the action should complete successfully
+  step: Then
