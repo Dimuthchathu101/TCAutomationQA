@@ -1,0 +1,13 @@
+feature: Element Interaction
+parameters:
+  click_type: single
+  description: Navigate to OrangeHRM Login Page and click Login Button
+  element: login_button
+scenario: Navigate to OrangeHRM Login Page and click Login Button
+steps:
+- action: I am on the Test 01 page
+  step: Given
+- action: I single on the login_button
+  step: When
+- action: the login_button should respond appropriately
+  step: Then
