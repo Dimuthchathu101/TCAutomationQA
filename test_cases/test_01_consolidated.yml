@@ -1,0 +1,239 @@
+# Consolidated Test Configuration for Test 01
+# This file contains all test scenarios in execution order
+
+project:
+  name: Test 01
+  website_url: https://dimuthchathu101.github.io/BitAndBuild/
+  total_scenarios: 11
+scenarios:
+- step_order: 1
+  feature: Element Interaction
+  scenario: Step_01_Click on Button Email Support
+  url: https://dimuthchathu101.github.io/BitAndBuild/
+  steps:
+  - action: I am on the Test 01 page
+    step: Given
+  - action: I click_element on the button
+    step: When
+  - action: the button should respond appropriately
+    step: Then
+  parameters:
+    click_type: click_element
+    description: Click on Button Email Support
+    element: button
+- step_order: 1
+  feature: Element Interaction
+  scenario: Step_01_Click on Button "Email Support"
+  url: https://dimuthchathu101.github.io/BitAndBuild/
+  steps:
+  - action: I am on the Test 01 page
+    step: Given
+  - action: I click_element on the button
+    step: When
+  - action: the button should respond appropriately
+    step: Then
+  parameters:
+    click_type: click_element
+    description: Click on Button "Email Support"
+    element: button
+- step_order: 1
+  feature: Element Interaction
+  scenario: Step_01_Login with valid credentials
+  url: https://dimuthchathu101.github.io/BitAndBuild/
+  steps:
+  - action: I am on the Test 01 page
+    step: Given
+  - action: I single on the button
+    step: When
+  - action: the button should respond appropriately
+    step: Then
+  parameters:
+    click_type: single
+    description: Login with valid credentials
+    element: button
+- step_order: 1
+  feature: Generic Test
+  scenario: Step_01_Navigate to dashboard
+  url: https://dimuthchathu101.github.io/BitAndBuild/
+  steps:
+  - action: I am on the Test 01 page
+    step: Given
+  - action: I perform navigate_to
+    step: When
+  - action: the action should complete successfully
+    step: Then
+  parameters:
+    description: Navigate to dashboard
+    original_parameters:
+      action_category: navigation
+      bdd_scenarios:
+      - description: Test Navigate to dashboard on element
+        name: Navigation General Test
+        steps:
+        - Given I am on the application page
+        - And I am authenticated
+        - When I click on the element
+        - Then I should be navigated to the target page
+        - And the page should load completely
+        tags:
+        - navigation
+        - general
+        - optimized
+      - description: Verify successful navigation to element
+        name: Successful Navigation
+        steps:
+        - Given I am authenticated
+        - And I am on the current page
+        - When I click on the element
+        - Then I should be navigated to the target page
+        - And the page should load completely
+        - And the page title should be correct
+        tags:
+        - navigation
+        - navigation
+        - optimized
+      complexity: 1.0
+      element: element
+      element_attributes:
+        enabled: true
+        interactive: false
+        name: element
+        type: general
+        visible: true
+      element_confidence: 0.7
+      element_selectors:
+        attribute: '[data-testid*=''element'' i] or [data-qa*=''element'' i] or [aria-label*=''element''
+          i] or [title*=''element'' i]'
+        class: null
+        css: div[id*='element' i], div[class*='element' i]
+        id: null
+        text: text=element
+        xpath: //div[contains(text(), 'element') or contains(@id, 'element') or contains(@class,
+          'element')]
+      element_type: general
+      excel_row: 2
+      expected_result: Step completed successfully
+      interaction_type: click
+      notes: Step 2
+      optimization_level: advanced
+      priority: 1.5
+      relevant_bdd_steps:
+      - Given I am on the application page
+      - And I am authenticated
+      - When I click on the element
+      - Then I should be navigated to the target page
+      - And the page should load completely
+      suggested_actions: []
+      test_case_type: Test Step
+      validation_rules: []
+      wait_strategy: visible
+    step_type: navigate_to
+- step_order: 1
+  feature: Form Interaction
+  scenario: Step_01_Enter username in login field
+  url: https://dimuthchathu101.github.io/BitAndBuild/
+  steps:
+  - action: I am on the Test 01 page
+    step: Given
+  - action: I enter "test text" in the element
+    step: When
+  - action: the element should contain "test text"
+    step: Then
+  parameters:
+    description: Enter username in login field
+    element: element
+    text: test text
+- step_order: 1
+  feature: Text Verification
+  scenario: Step_01_Verify user profile data
+  url: https://dimuthchathu101.github.io/BitAndBuild/
+  steps:
+  - action: I am on the Test 01 page
+    step: Given
+  - action: I check the element
+    step: When
+  - action: it should display "expected text"
+    step: Then
+  parameters:
+    description: Verify user profile data
+    element: element
+    expected_text: expected text
+- step_order: 1
+  feature: Element Interaction
+  scenario: Step_01_Navigate to OrangeHRM Login Page and click Login Button
+  url: https://dimuthchathu101.github.io/BitAndBuild/
+  steps:
+  - action: I am on the Test 01 page
+    step: Given
+  - action: I single on the login_button
+    step: When
+  - action: the login_button should respond appropriately
+    step: Then
+  parameters:
+    click_type: single
+    description: Navigate to OrangeHRM Login Page and click Login Button
+    element: login_button
+- step_order: 1
+  feature: Element Interaction
+  scenario: Step_01_Step_01_Navigate to OrangeHRM Login Page and click Login B
+  url: /login
+  steps:
+  - action: I am on the "/login" page
+    step: Given
+  - action: I single on the login_button
+    step: When
+  - action: the login_button should respond appropriately
+    step: Then
+  parameters:
+    click_type: single
+    description: Navigate to OrangeHRM Login Page and click Login Button
+    element: login_button
+    url: /login
+- step_order: 2
+  feature: Form Interaction
+  scenario: Step_02_Step_02_Enter username in login field
+  url: /login
+  steps:
+  - action: I am on the "/login" page
+    step: Given
+  - action: I enter "test text" in the element
+    step: When
+  - action: the element should contain "test text"
+    step: Then
+  parameters:
+    description: Enter username in login field
+    element: element
+    text: test text
+    url: /login
+- step_order: 3
+  feature: Text Verification
+  scenario: Step_03_Step_03_Verify user profile data
+  url: /login
+  steps:
+  - action: I am on the "/login" page
+    step: Given
+  - action: I check the element
+    step: When
+  - action: it should display "expected text"
+    step: Then
+  parameters:
+    description: Verify user profile data
+    element: element
+    expected_text: expected text
+    url: /login
+- step_order: 4
+  feature: Text Verification
+  scenario: Step_04_Step_04_Verify user profile data
+  url: /login
+  steps:
+  - action: I am on the "/login" page
+    step: Given
+  - action: I check the element
+    step: When
+  - action: it should display "expected text"
+    step: Then
+  parameters:
+    description: Verify user profile data
+    element: element
+    expected_text: expected text
+    url: /login
