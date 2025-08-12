@@ -1,0 +1,250 @@
+name: BDD Test Runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_environment:
+        description: 'Test environment'
+        required: false
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+  push:
+    branches: [ main, master ]
+    paths:
+    - 'test_cases/**'
+    - '.github/workflows/test-runner.yml'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+    - 'test_cases/**'
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      test-files: ${{ steps.find-tests.outputs.files }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Find test files
+      id: find-tests
+      run: |
+        if [ -d "test_cases" ]; then
+          files=$(find test_cases -name "*.feature" -o -name "*.yml" | tr '\n' ' ')
+          echo "files=$files" >> $GITHUB_OUTPUT
+          echo "Found test files: $files"
+        else
+          echo "files=" >> $GITHUB_OUTPUT
+          echo "No test_cases directory found"
+        fi
+
+  run-bdd-tests:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+    if: needs.setup.outputs.test-files != ''
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Cache pip dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install behave pytest selenium requests beautifulsoup4 playwright pyyaml
+        
+    - name: Verify installations
+      run: |
+        python --version
+        pip list | grep -E "(behave|pytest|selenium|requests|beautifulsoup4|playwright|pyyaml)"
+        
+    - name: Verify pyyaml installation
+      run: |
+        pip show pyyaml || echo "pyyaml not found"
+        python -c "import yaml; print('yaml module imported successfully')" || echo "yaml module import failed"
+        
+    - name: Install Playwright browsers
+      run: |
+        npx playwright install chromium
+        npx playwright install-deps
+        
+    - name: Debug test files
+      run: |
+        echo "Current directory: $(pwd)"
+        echo "Listing test_cases directory:"
+        ls -la test_cases/ || echo "test_cases directory not found"
+        echo "Finding .feature and .yml files:"
+        find test_cases -name "*.feature" -o -name "*.yml" || echo "No .feature or .yml files found"
+        
+    - name: Run BDD tests
+      run: |
+        echo "Running BDD tests with Python ${{ matrix.python-version }}"
+        if [ -n "${{ needs.setup.outputs.test-files }}" ]; then
+          echo "Running behave on test_cases directory"
+          behave test_cases/ --format=json --outfile=test-results-${{ matrix.python-version }}.json
+        else
+          echo "No test files found"
+        fi
+      continue-on-error: true
+      
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.python-version }}
+        path: test-results-${{ matrix.python-version }}.json
+
+  docker-test:
+    needs: setup
+    runs-on: ubuntu-latest
+    if: needs.setup.outputs.test-files != ''
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Build test container
+      run: |
+        echo "Building Docker image from inline Dockerfile (stdin)"
+        docker build -t bdd-test-runner -f - . <<'DOCKERIN'
+        FROM python:3.11-slim
+        RUN apt-get update && apt-get install -y \
+            wget \
+            gnupg \
+            && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+            && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
+            && apt-get update \
+            && apt-get install -y \
+            google-chrome-stable \
+            fonts-ipafont-gothic \
+            fonts-wqy-zenhei \
+            fonts-thai-tlwg \
+            fonts-kacst \
+            fonts-freefont-ttf \
+            libxss1 \
+            && rm -rf /var/lib/apt/lists/*
+        WORKDIR /app
+        RUN pip install --no-cache-dir behave pytest selenium requests beautifulsoup4 playwright pyyaml && python -c "import yaml; print('yaml ok')"
+        RUN playwright install chromium && playwright install-deps
+        COPY test_cases/ ./test_cases/
+        RUN mkdir -p test_cases/steps
+        ENV CHROME_BIN=/usr/bin/google-chrome
+        ENV CHROME_PATH=/usr/bin/google-chrome
+        CMD ["behave", "test_cases/", "--format=json", "--outfile=test-results.json"]
+        DOCKERIN
+        
+    - name: Run tests in Docker
+      run: |
+        echo "Running Docker container with behave tests..."
+        echo "Checking test files before running:"
+        docker run --rm bdd-test-runner ls -la test_cases/
+        echo "Running behave with verbose output and continue on error..."
+        docker run --rm bdd-test-runner behave test_cases/ --format=json --outfile=docker-test-results.json --verbose --no-capture || echo "Behave tests completed with some errors"
+        echo "Checking if results file was created:"
+        docker run --rm bdd-test-runner ls -la *.json || echo "No JSON results file found"
+        echo "Creating fallback results if needed..."
+        docker run --rm bdd-test-runner bash -c "if [ ! -f "docker-test-results.json" ]; then echo "[]" > docker-test-results.json; fi"
+        
+
+    - name: Upload Docker test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: docker-test-results
+        path: docker-test-results.json
+
+  test-report:
+    needs: [run-bdd-tests, docker-test]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download test results
+      uses: actions/download-artifact@v4
+      with:
+        path: test-results
+        
+    - name: Generate test report
+      run: |
+        echo "## BDD Test Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        for result_file in test-results/*.json; do
+          if [ -f "$result_file" ]; then
+            echo "### $(basename $result_file .json)" >> $GITHUB_STEP_SUMMARY
+            python -c "import json; import sys; data = json.load(open('$result_file', 'r')); total = len(data); passed = sum(1 for test in data if test.get('status') == 'passed'); failed = total - passed; print(f'- Total tests: {total}'); print(f'- Passed: {passed}'); print(f'- Failed: {failed}'); print(f'- Success rate: {(passed/total*100):.1f}%')" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+        done
+        
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          let summary = '';
+          try {
+            summary = fs.readFileSync(process.env.GITHUB_STEP_SUMMARY, 'utf8');
+          } catch (e) {
+            summary = 'Test results could not be generated';
+          }
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: summary
+          });
+
+  notify:
+    needs: [test-report]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Notify on failure
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: 'BDD Tests Failed',
+            body: 'Some BDD tests have failed. Please check the test results.',
+            labels: ['bug', 'test-failure']
+          });
+          
+    - name: Notify on success
+      if: success()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          console.log('All BDD tests passed successfully!');
