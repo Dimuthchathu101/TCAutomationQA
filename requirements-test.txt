@@ -1,9 +1,0 @@
-behave
-pytest
-selenium
-requests
-beautifulsoup4
-playwright
-openpyxl
-gitpython
-pyyaml>=6.0
